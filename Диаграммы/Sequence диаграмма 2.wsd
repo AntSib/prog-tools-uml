@@ -1,0 +1,77 @@
+@startuml Развёртывание веб-сервиса на удалённой машине
+
+' ==============================
+' ACTORS & PARTICIPANTS
+' ==============================
+
+actor "Системный администратор" as admin
+entity "Мастер платформа" as repo
+entity "runner" as runner
+entity "Новая удалённая машина\n(сервер)" as new_server
+database "Хранилище образов" as img_storage
+entity "Старая удалённая машина\n(сервер)" as old_server
+
+' ==============================
+' MAIN FLOW
+' ==============================
+title Развёртывание веб-сервиса на удалённой машине
+autonumber
+
+
+admin -> repo: Обновление конфигурации проекта
+
+activate admin
+activate repo
+
+admin -> repo: Обновление конфигурации CD
+note right of admin : Добавление информации о хранилище образа и удалённой машине
+
+
+
+repo -> runner: Запуск пайплайна
+
+activate runner
+
+
+alt Подключение к удалённой машине
+    runner -> new_server: Подключение 
+    activate new_server
+
+else Не удалось выполнить подключение 
+    runner --> repo: Ошибка подключения
+    repo --> admin: Отправить отчёт о ошибке
+    note right of admin : Анализ сообщения о ошибке
+
+    admin -> repo: Внесение правок в конфигурацию
+    repo -> runner: Перезапуск задачи
+    runner -> new_server: Подключение 
+end
+
+runner -> new_server: Настройка состояния
+
+new_server -> img_storage: Запрос на скачивание образа
+img_storage -> new_server: Скачивание образа проекта
+new_server -> new_server: Запуск образа в Kubernetes
+runner -> new_server: Health check работы веб-сервиса
+
+runner --> repo: Успешное завершение
+repo --> admin: Отчёт о успешном развёртывании
+
+alt Периодическая проверка работы веб-сервиса
+    runner -> new_server: Health check работы веб-сервиса
+else Проверка не успешна
+    runner --> repo: Сообщение об ошибке
+    repo --> admin: Отправить отчёт об ошибке
+end
+
+deactivate repo
+deactivate new_server
+deactivate admin
+
+alt Перенос веб-сервиса на новую удалённую машину
+    runner -> old_server: Остановка работы старой машины
+end
+
+deactivate runner
+
+@enduml

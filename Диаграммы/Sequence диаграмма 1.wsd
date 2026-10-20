@@ -1,13 +1,13 @@
-@startuml sequence_AddNewWebService
+@startuml Добавление проекта нового веб-сервиса
 
 ' ==============================
 ' ACTORS & PARTICIPANTS
 ' ==============================
 
 actor "Системный администратор" as admin
-entity "Платформа" as Repo
-entity "Runner" as Runner
-database "Хранилище образов" as ImgStorage
+entity "Платформа" as repo
+entity "runner" as runner
+database "Хранилище образов" as img_storage
 
 ' ==============================
 ' MAIN FLOW
@@ -15,81 +15,73 @@ database "Хранилище образов" as ImgStorage
 title Добавление нового веб сервиса
 autonumber
 
-admin -> Repo: Настроить шаблон репозитория
+admin -> repo: Настроить шаблон репозитория
 
 activate admin
-activate Repo
+activate repo
 
-admin -> Repo: Создать/Настроить шаблон CI
+admin -> repo: Создать/Настроить шаблон CI
 
-admin -> Repo: Создать/Настроить шаблон CD
+admin -> repo: Создать/Настроить шаблон CD
 
-Repo -> Repo : Включить CI в пайплайн проекта
-Repo -> Repo : Включить CD в пайплайн проекта
+repo -> repo : Включить CI в пайплайн проекта
+repo -> repo : Включить CD в пайплайн проекта
 
-admin -> Repo: Добавление файлов проекта
+admin -> repo: Добавление файлов проекта
 
 deactivate admin
 
-Repo -> Runner: Запуск пайплайна
+repo -> runner: Запуск пайплайна
 
-activate Runner
+activate runner
 
-' ========================================================
-' ALTERNATIVE FLOW: Изменение CD во время работы пайплайна
-' ========================================================
-
-note right of Repo : Если тестирование проекта проходит\nно требуется изменение конфигурации CD
+note right of repo : Если тестирование проекта проходит\nно требуется изменение конфигурации CD
 
 alt Администратор решает изменить CI/CD
-    admin -> Repo: Обновить конфигурацию CI/CD
+    admin -> repo: Обновить конфигурацию CI/CD
     
-    note right of Repo : Репозиторий получает новые\nнастройки и готов к перезапуску
+    note right of repo : Репозиторий получает новые\nнастройки и готов к перезапуску
 
-    Repo -> Runner: Перезапуск задачи
-    Runner -> Runner : Тестирование проекта с новыми настройками
+    repo -> runner: Перезапуск задачи
+    runner -> runner : Тестирование проекта с новыми настройками
     
 end
 
-' ==============================
-' TESTING FLOW
-' ==============================
-
-note left of Runner : Если на шаге CI вызвана ошибка\nдо создания образа
+note left of runner : Если на шаге CI вызвана ошибка\nдо создания образа
 
 alt Успешное тестирование
 
-    Runner -> Runner : Тестирование проекта
+    runner -> runner : Тестирование проекта
 
 else Не успешеное тестироварие
-    Runner -> Repo: Ошибка на шаге тестирования
-    Repo -> admin: Отправить отчет об ошибке CI
+    runner -> repo: Ошибка на шаге тестирования
+    repo -> admin: Отправить отчет об ошибке CI
     
     note right of admin: Анализ отчета ошибки CI\nКорректировка конфигурации CI
     
-    admin -> Repo : Обновление конфигурации CI
+    admin -> repo : Обновление конфигурации CI
 
-    Repo -> Runner: Перезапустить задачу CI
-    Runner -> Runner : Тестирование
+    repo -> runner: Перезапустить задачу CI
+    runner -> runner : Тестирование
 
 end
 
 
 alt Успешная сборка образа
-    Runner -> Runner: Создать образа
-    activate ImgStorage
-    Runner -> ImgStorage: Отправить образ в хранилище
-    ImgStorage --> Runner : Подтверждение сохранения образа
-    deactivate ImgStorage
+    runner -> runner: Создать образа
+    activate img_storage
+    runner -> img_storage: Отправить образ в хранилище
+    img_storage --> runner : Подтверждение сохранения образа
+    deactivate img_storage
 else Ошибка сборки
-    Runner -> Repo: Ошибка на шаге сборки
-    deactivate Runner
-    Repo -> admin: Отправить отчет об ошибке сборки
+    runner -> repo: Ошибка на шаге сборки
+    deactivate runner
+    repo -> admin: Отправить отчет об ошибке сборки
     note right of admin: Анализ отчета ошибки\nКорректировка конфигурации CI
 end
 
 
-Runner --> Repo : Завершение потока
-deactivate Runner
+runner --> repo : Завершение потока
+deactivate runner
 
 @enduml
