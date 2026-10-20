@@ -1,0 +1,78 @@
+@startuml Добавление нового веб сервиса для развёртывания
+
+left to right direction
+
+' ACTORS
+
+: Системный администратор : as Admin
+
+: Платформа : as Repo
+: Runner : as Runner
+
+Runner --|> Repo
+
+: Хранилище образов : as ImgStorage
+
+' ACTORS END
+
+
+' USE CASES
+package "Добавление нового веб сервиса для развёртывание" {
+    package "Настройка репозитория" {
+        (Настройка шаблона репозитория) as RepoTmpl
+        (Добавление файлов проекта) as Project
+        (Настройка шаблона CI) as CIConf
+        (Настройка шаблона CD) as CDConf
+
+        RepoTmpl <.. CIConf : include
+        RepoTmpl <.. CDConf : include
+    }
+
+
+    package "Работа репозитория" {
+        (Запуск CI) as CIRun
+        (Тестирование проекта) as TestProj
+        (Сборка образа) as BuildImg
+        (Тестирование образа) as TestImg
+        (Запуск CD) as CDRun
+        (Сохранение образа в хранилище) as SavImg
+
+        CIRun ..> TestProj : extend
+        CIRun <.. BuildImg : include
+        CIRun ..> TestImg : extend
+
+        CDRun <.. SavImg : include
+
+        (Обработка ошибки) as Error
+        (Вывод ошибки) as ShowError
+
+        ShowError <.. Error : include
+    }
+
+
+}
+
+' USE CASES END
+
+
+' ACTOR-CASE RELATIONS
+
+Admin --> RepoTmpl
+Admin --> Project
+
+RepoTmpl -up-> Repo
+Project -up-> Repo
+
+Repo -down-> ShowError
+
+Runner --> CIRun
+Runner --> CDRun
+
+Error ..> CIRun : extend
+Error ..> CDRun : extend
+
+SavImg <-- ImgStorage
+
+' ACTOR-CASE RELATIONS
+
+@enduml

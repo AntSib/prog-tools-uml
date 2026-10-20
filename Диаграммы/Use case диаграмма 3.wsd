@@ -1,0 +1,72 @@
+@startuml Развертывание нового веб-сервиса на удалённое машине
+
+left to right direction
+
+' ACTORS
+: Системный администратор : as Admin
+
+: Master Платформа : as Repo
+: Runner : as Runner
+
+Runner -right-|> Repo
+
+: Новая удалённая машина\n\t\t(Сервер) : as NewServer
+: Старая удалённая машина\n\t\t(Сервер) : as OldServer
+
+' ACTORS END
+
+
+' USE CASES
+package "Развертывание нового веб-сервиса на удалённое машине" {
+    package "Настройка платформы" {
+        (Корректирование конфигурации Master-платформы) as MstConf
+    }
+
+    package "Работа платформы" {
+        (Подключение к удалённой машине) as Conn2Srv
+        (Настройка состояния) as SrvStateConf
+        (Управление удалённой машиной) as SrvCtl
+        (Проверка состояния работы веб-сервиса) as HealthCheck
+        (Остановка машины) as StopServer
+
+        (Загрузка образа проекта) as DownloadImg
+        (Запуск образа в Kubernetes) as RunKuber
+
+        SrvCtl <.. StopServer : include
+        SrvCtl <.. SrvStateConf : include
+        SrvCtl <.. DownloadImg : include
+        SrvCtl <.. RunKuber : include
+
+        (Обработка ошибки) as Error
+        (Вывод ошибки) as ShowError
+
+        ShowError <.. Error : include
+
+        Error ..> SrvStateConf : extends
+        Error ..> DownloadImg : extends
+        Error ..> RunKuber : extends
+    }
+}
+
+' USE CASES END
+
+
+' ACTOR-CASE RELATIONS
+Admin --> MstConf
+
+MstConf --> Repo
+
+Runner --> Conn2Srv
+Runner --> SrvCtl
+Runner --> HealthCheck
+Repo --> ShowError
+
+SrvStateConf --> NewServer
+DownloadImg --> NewServer 
+RunKuber --> NewServer
+
+StopServer --> OldServer
+
+' ACTOR-CASE RELATIONS
+
+@enduml

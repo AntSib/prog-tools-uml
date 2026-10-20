@@ -1,0 +1,76 @@
+@startuml Работа платформы
+
+title Работа платформы
+
+start
+
+if (Инициирован CI?) then (Да)
+    group Этап CI {
+        : Запуск этапа CI ;
+
+        if (Статическое тестирование настроено?) then (Да)
+            : Запуск статического тестирования ;
+            if (Статическое тестирование успешно?) then (Да)
+                label build_image
+                : Запуск сборки образа ;
+                if (Сборка образа успешна?) then (Да)
+                    if (Динамическое тестирование настроено) then (Да)
+                        : Запуск динамического тестирования ;
+                        if (Динамическое тестирование успешно?) then (Да)
+                        else (Нет)
+                            label show_error
+                            : Отобразить информацию о ошибке ;
+                            stop
+                        endif
+
+                    else (Нет)
+                    endif
+
+                else (Нет)
+                    label build_image_fail
+                    label spacer
+                    label spacer
+                    label spacer
+                    label spacer
+                    goto show_error
+                endif
+
+            else (Нет)
+                label static_testing_fail
+                label spacer
+                label spacer
+                label spacer
+                goto build_image_fail
+            endif
+
+        else (Нет)
+            label spacer
+            label spacer
+            label spacer
+            goto build_image
+        endif
+    }
+else (Нет)
+endif
+
+
+if (Инициирован CD?) then (Да)
+    group Этап CD {
+        : Запуск этапа CD ;
+
+        if (Выгрузка образа в хранилище настроена?) then (Да)
+            : Выгрузить образ в хранилище ;
+            if (Выгрузка образа успешна) then (Да)
+            else (Нет)
+                : Отобразить информацию о ошибке ;
+                stop
+            endif
+        else (Нет)
+        endif
+    }
+else (Нет)
+endif
+
+stop
+
+@enduml
