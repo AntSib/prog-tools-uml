@@ -54,24 +54,25 @@ img_storage -> new_server: Скачивание образа проекта
 new_server -> new_server: Запуск образа в Kubernetes
 runner -> new_server: Health check работы веб-сервиса
 
+
+alt Перенос веб-сервиса на новую удалённую машину
+    runner -> old_server: Остановка Kubernetes на старой машины
+    old_server --> runner: Kubernetes остановлен
+end
+
 runner --> repo: Успешное завершение
 repo --> admin: Отчёт о успешном развёртывании
 
 alt Периодическая проверка работы веб-сервиса
     runner -> new_server: Health check работы веб-сервиса
+    deactivate new_server
 else Проверка не успешна
     runner --> repo: Сообщение об ошибке
+    deactivate runner
     repo --> admin: Отправить отчёт об ошибке
+    deactivate repo
+    deactivate admin
 end
 
-deactivate repo
-deactivate new_server
-deactivate admin
-
-alt Перенос веб-сервиса на новую удалённую машину
-    runner -> old_server: Остановка работы старой машины
-end
-
-deactivate runner
 
 @enduml
