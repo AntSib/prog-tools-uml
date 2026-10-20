@@ -69,8 +69,8 @@ end
 
 alt Успешная сборка образа
     runner -> runner: Создать образа
-    activate img_storage
     runner -> img_storage: Отправить образ в хранилище
+    activate img_storage
     img_storage --> runner : Подтверждение сохранения образа
     deactivate img_storage
 else Ошибка сборки
