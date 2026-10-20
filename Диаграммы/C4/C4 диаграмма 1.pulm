@@ -1,0 +1,20 @@
+@startuml
+!include <C4/C4_Component>
+!include <C4/C4_Container>
+!include <C4/C4_Context>
+!include <C4/C4_Deployment>
+!include <C4/C4_Dynamic>
+' !include <C4/C4_Sequence>
+!include <C4/C4>
+
+Person(admin, "Администратор", $sprite="person2")
+System(repo, "Платформа", $sprite="robot")
+ContainerDb(db, "Хранилище образов", "Хранит образы веб-приложения")
+
+Rel(admin, repo, "Внесение файлов")
+Rel(repo, db, "Сохранение образов веб-сервиса", "?HTTPS?")
+
+
+Container(repo, "Платформа")
+
+@enduml
